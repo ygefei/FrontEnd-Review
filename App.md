@@ -43,6 +43,8 @@
 
 ​		使用`RCTRootView`将 React Natvie 视图封装到原生组件中。`RCTRootView`是一个`UIView`容器，承载着 React Native 应用。同时它也提供了一个联通原生端和被托管端的接口。
 
+​		在 RN 中，根组件(root components)需要通过`AppRegistry`的`registerComponent`方法进行注册。所谓根组件，就是 Native to JS 的入口，Native 在加载 RN bundle 之后可通过`AppRegistry`的`runApplication`方法运行指定的根组件，从而进入 RN 的世界。
+
 
 
 ### 小程序
