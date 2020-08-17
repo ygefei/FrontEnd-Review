@@ -89,3 +89,120 @@ width=device-width` 这句代码可以把布局视口设置成为浏览器（屏
    
        window.addEventListener('resize', refreshRem);
    ```
+
+
+
+### 动画
+
+#### transition
+
+同时改变宽高
+
+```css
+img{
+    transition: 1s height, 1s width; 
+} 
+```
+
+速度：
+
+- ease: 逐渐放慢
+- linear：匀速
+- ease-in：加速
+- ease-out：减速
+- cubic-bezier函数：自定义速度模式
+
+```css
+img{
+    transition: 1s ease;
+}
+```
+
+局限性：
+
+- transition需要事件触发，所以没法在网页加载时自动发生。
+- transition是一次性的，不能重复发生，除非一再触发。
+- transition只能定义开始状态和结束状态，不能定义中间状态，也就是说只有两个状态。
+- 一条transition规则，只能定义一个属性的变化，不能涉及多个属性
+
+#### Animation
+
+无限循环
+
+```css
+div:hover {
+  animation: 1s rainbow infinite;
+}
+
+@keyframes rainbow {
+  0% { background: #c00; }
+  50% { background: orange; }
+  100% { background: yellowgreen; }
+}
+```
+
+保持结束状态
+
+> ```css
+> div:hover {
+>   animation: 1s rainbow forwards;
+> }
+> ```
+
+
+
+> ```css
+> 
+> div:hover {
+>   animation: 1s 1s rainbow linear 3 forwards normal;
+> }
+> 
+> 
+> div:hover {
+>   animation-name: rainbow;
+>   animation-duration: 1s;
+>   animation-timing-function: linear;
+>   animation-delay: 1s;
+>   animation-fill-mode:forwards;
+>   animation-direction: normal;
+>   animation-iteration-count: 3;
+> }
+> ```
+
+
+
+### transform
+
+rotate
+
+```css
+#demo {
+   transform:rotate(180deg)  ;/*实现旋转,左上角的东西会在右下角显示*/
+}
+```
+
+scale
+
+```css
+#demo {
+  transform:scale(1.2);/*放大1.2倍*/
+  transform:scale(.8);/*缩小为正常的0.8倍*/
+}
+```
+
+skew
+
+```css
+#demo {
+  transform:skew(45deg);/*文本沿x轴向左倾斜45°*/
+  transform:skew(0,45deg);/*文本沿y轴向下倾斜45°*/
+}
+```
+
+translate
+
+```css
+#demo {
+  transform:translate(20px,5vh);/*向左移动二十像素,向下移动百分之五的视窗高度*/
+}
+```
