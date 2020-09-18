@@ -7,7 +7,7 @@
 1. Attributes are defined by HTML, all definitions inside HTML tag are attributes.
 2. The type of attributes is always string.
 
-### Property
+#### Property
 
 1. Properties belong to DOM, the nature of DOM is an object in  JavaScript. We can get and set properties as we do to a normal object in JavaScript and properties can be any types.
 

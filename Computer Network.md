@@ -2,25 +2,160 @@
 
 ### 跨域
 
-#### 1. CORS
+#### CORS："跨域资源共享"（Cross-origin resource sharing）。它允许浏览器向跨源服务器，发出[`XMLHttpRequest`](http://www.ruanyifeng.com/blog/2012/09/xmlhttprequest_level_2.html)请求，从而克服了AJAX只能[同源](http://www.ruanyifeng.com/blog/2016/04/same-origin-policy.html)使用的限制。
 
-- 简单请求
+##### 简单请求
 
-  （1) 请求方法是以下三种方法之一：
+（1) 请求方法是以下三种方法之一：
 
-  - HEAD
-  - GET
-  - POST
+- HEAD
+- GET
+- POST
 
-  （2）HTTP的头信息不超出以下几种字段：
+（2）HTTP的头信息不超出以下几种字段：
 
-  - Accept
-  - Accept-Language
-  - Content-Language
-  - Last-Event-ID
-  - Content-Type：只限于三个值`application/x-www-form-urlencoded`、`multipart/form-data`、`text/plain`
+- Accept
+- Accept-Language
+- Content-Language
+- Last-Event-ID
+- Content-Type：只限于三个值`application/x-www-form-urlencoded`、`multipart/form-data`、`text/plain`
 
-- 非简单请求
+（3）浏览器发现这次跨源AJAX请求是简单请求，就自动在头信息之中，添加一个`Origin`字段。`Origin`字段用来说明，本次请求来自哪个源（协议 + 域名 + 端口）。
+
+```http
+Origin: http://api.bob.com
+```
+
+- `Origin`指定的源，不在许可范围内：服务器会返回一个正常的HTTP回应，状态码可能是200。浏览器抛出一个错误，被`XMLHttpRequest`的`onerror`回调函数捕获。
+
+- `Origin`指定的域名在许可范围内：服务器返回的响应，会多出几个头信息字段。
+
+  ```http
+  Access-Control-Allow-Origin: http://api.bob.com //*表示任意域名请求
+  Access-Control-Allow-Credentials: true //表示Cookie可以包含在请求中
+  Access-Control-Expose-Headers: FooBar //除getResponseHeader()可取的6个基本字段（Cache-Control、Content-Language、Content-Type、Expires、Last-Modified、Pragma）外，可获取的其他头信息字段
+  Content-Type: text/html; charset=utf-8 
+  ```
+
+  Notice: 开发者必须在AJAX请求中打开`withCredentials`属性，使客户端浏览器可携带Cookie
+
+  ```javascript
+  var xhr = new XMLHttpRequest();
+  xhr.withCredentials = true;
+  ```
+
+
+
+##### 非简单请求
+
+（1）预检请求
+
+```http
+OPTIONS /cors HTTP/1.1
+Origin: http://api.bob.com
+Access-Control-Request-Method: PUT //用来列出浏览器的CORS请求会用到哪些HTTP方法
+Access-Control-Request-Headers: X-Custom-Header //指定浏览器CORS请求会额外发送的头信息字段
+Host: api.alice.com
+Accept-Language: en-US
+Connection: keep-alive
+User-Agent: Mozilla/5.0...
+```
+
+（2）预检请求的回应
+
+```http
+HTTP/1.1 200 OK
+Date: Mon, 01 Dec 2008 01:15:39 GMT
+Server: Apache/2.0.61 (Unix)
+Access-Control-Allow-Origin: http://api.bob.com
+Access-Control-Allow-Methods: GET, POST, PUT
+Access-Control-Allow-Headers: X-Custom-Header
+Content-Type: text/html; charset=utf-8
+Content-Encoding: gzip
+Content-Length: 0
+Keep-Alive: timeout=2, max=100
+Connection: Keep-Alive
+Content-Type: text/plain
+```
+
+Notice: 
+
+- 服务器否定了"预检"请求，会返回一个正常的HTTP回应，没有任何CORS相关的头信息字段。浏览器触发一个错误，被`XMLHttpRequest`对象的`onerror`回调函数捕获。
+
+- 服务器回应的特殊字段：
+
+  ```http
+  Access-Control-Max-Age: 1728000
+  ```
+
+  该字段可选，用来指定本次预检请求的有效期，单位为秒。上面结果中，有效期是20天（1728000秒），即允许缓存该条回应1728000秒（即20天），在此期间，不用发出另一条预检请求。
+
+（3）浏览器的正常请求和回应：一旦服务器通过了"预检"请求，以后每次浏览器正常的CORS请求，就都跟简单请求一样，会有一个`Origin`头信息字段。服务器的回应，也都会有一个`Access-Control-Allow-Origin`头信息字段。
+
+
+
+### 浏览器缓存
+
+- 浏览器每次发起请求，都会先在浏览器缓存中查找该请求的结果以及缓存标识
+
+- 浏览器每次拿到返回的请求结果都会将该结果和缓存标识存入浏览器缓存中
+
+  
+
+![img](https://user-gold-cdn.xitu.io/2018/4/19/162db6359673e7d0?imageslim)
+
+
+
+#### 强制缓存：
+
+不存在该缓存结果和缓存标识，强制缓存失效，则直接向服务器发起请求（跟第一次发起请求一致）
+
+存在该缓存结果和缓存标识，但该结果已失效，强制缓存失效，则使用协商缓存
+
+存在该缓存结果和缓存标识，且该结果尚未失效，强制缓存生效，直接返回该结果
+
+控制强制缓存的字段分别是Expires和Cache-Control，其中Cache-Control优先级比Expires高。Cache-Control是相对值，Expire是绝对值。
+
+- Expires是HTTP/1.0控制网页缓存的字段，其值为服务器返回该请求结果缓存的到期时间，即再次发起该请求时，如果客户端的时间小于Expires的值时，直接使用缓存结果。（Expire是服务端时间，可能会与客户端时间产生误差，或者因时区不同而出问题）。
+- 在HTTP/1.1中，Cache-Control是最重要的规则，主要用于控制网页缓存，主要取值为：
+  - public：所有内容都将被缓存（客户端和代理服务器都可缓存）
+  - private：所有内容只有客户端可以缓存，Cache-Control的默认取值
+  - no-cache：客户端缓存内容，但是是否使用缓存则需要经过协商缓存来验证决定
+  - no-store：所有内容都不会被缓存，即不使用强制缓存，也不使用协商缓存
+  - max-age=xxx (xxx is numeric)：缓存内容将在xxx秒后失效
+- 缓存存放的位置：from memory cache 和 from disk cache，浏览器读取缓存的顺序为memory –> disk。
+  - 内存缓存(from memory cache)：
+    - 快速读取：将编译解析后的文件，直接存入该进程的内存中，占据该进程一定的内存资源，以方便下次运行使用时的快速读取。
+    - 时效性：一旦该进程关闭（浏览器关闭），则该进程的内存则会清空。
+  - 硬盘缓存(from disk cache)：直接将缓存写入硬盘文件中，读取缓存需要对该缓存存放的硬盘文件进行I/O操作，然后重新解析该缓存内容，读取复杂，速度比内存缓存慢。
+  - 在浏览器中，浏览器会在js和图片等文件解析执行后直接存入内存缓存中，那么当刷新页面时只需直接从内存缓存中读取(from memory cache)；而css文件则会存入硬盘文件中，所以每次渲染页面都需要从硬盘读取缓存(from disk cache)。
+
+
+
+#### 协商缓存：
+
+强制缓存失效后，浏览器携带缓存标识向服务器发起请求，由服务器根据缓存标识决定是否使用缓存的过程，主要有以下两种情况：
+
+- 协商缓存生效，返回304：
+
+  ![img](https://user-gold-cdn.xitu.io/2018/4/19/162db635cbfff69d?imageslim)
+
+  
+
+- 协商缓存失效，返回200和请求结果：
+
+  ![img](https://user-gold-cdn.xitu.io/2018/4/19/162db635cf070ff5?imageslim)
+
+- 控制协商缓存的字段分别有：Last-Modified / If-Modified-Since和Etag / If-None-Match，其中Etag / If-None-Match的优先级比Last-Modified / If-Modified-Since高。
+
+  - Last-Modified是服务器响应请求时，返回该资源文件在服务器最后被修改的时间。If-Modified-Since则是客户端再次发起该请求时，携带上次请求返回的Last-Modified值，通过此字段值告诉服务器该资源上次请求返回的最后被修改时间。
+  - Etag是服务器响应请求时，返回当前资源文件的一个唯一标识(由服务器生成)。If-None-Match是客户端再次发起该请求时，携带上次请求返回的唯一标识Etag值，通过此字段值告诉服务器该资源上次请求返回的唯一标识值。
+
+
+
+![img](https://user-gold-cdn.xitu.io/2018/4/19/162db635ed5f6d26?imageslim)
+
+
 
 
 
@@ -28,7 +163,7 @@
 
 在一个Http连接上，多路“HTTP消息“同时工作
 
-![截屏2020-08-16 下午7.46.39](/Users/gefeiyang/Desktop/截屏2020-08-16 下午7.46.39.png)
+![img](https://img-blog.csdn.net/20180608152310260?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3lhbmdndW9zYg==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)
 
 二进制帧结构：
 
@@ -258,3 +393,6 @@ TCP允许通信双方的应用程序在任何时候都能发送数据，因为TC
 TCP:  HTTP, FTP, SMTP, Telnet, POP3
 
 UDP：DNS，SNMP，TFTP
+
+
+

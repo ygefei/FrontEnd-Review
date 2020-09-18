@@ -77,18 +77,31 @@ call的后面传入参数以逗号隔开，apply的后面传入参数则以数�
 
 call和apply是立即执行函数
 
-#### 用apply写bind
+
+
+#### 用apply实现bind
 
 ```javascript
-Function.prototype.bind = function(obj,...args){
-  let arguments = [].slice.apply(args);
+Function.prototype.bind = function(obj){
+  let self = this;
   return function(){
-    
+    return self.apply(obj,arguments); //arguments作为类数组对象，可作为apply第二个参数
   }
 }
 ```
 
 
+
+### arguments转变为数组
+
+```js
+var args = Array.prototype.slice.call(arguments);
+// Using an array literal is shorter than above but allocates an empty array
+var args = [].slice.call(arguments); 
+let args = Array.from(arguments);
+// or
+let args = [...arguments];
+```
 
 
 

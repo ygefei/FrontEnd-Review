@@ -115,6 +115,353 @@
 
 
 
+### 水平垂直居中
+
+1. position: absolute，元素已知宽度：绝对定位+margin反向偏移
+
+```css
+.wrap {
+    position: relative;
+    background-color: orange;
+    width: 300px;
+    height: 300px;
+}
+.item {
+    background-color: red;
+    width: 100px;
+    height: 100px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin: -50px 0 0 -50px;
+}
+```
+
+2. position+transform, 元素未知宽度：将**margin: -50px 0 0 -50px**替换为**transform: translate(-50%,-50%)**
+
+3. flex布局
+
+   ```CSS
+   .container {
+     background-color: #FF8C00;
+     width: 200px;
+     height: 200px;
+     display: flex;
+     justify-content: center; 
+     align-items: center; 
+   }
+   ```
+
+4. 绝对布局
+
+   绝对定位元素：
+
+   ```
+   left + margin-left + border-left-width + padding-left + width + padding-right + border-right-width + margin-right + right = width of containing block
+   ```
+
+   ```
+   top + margin-top + border-top-width + padding-top + height + padding-bottom + border-bottom-width + margin-bottom + bottom = height of containing block
+   ```
+
+   ```css
+   .warp {
+     position: relative;
+     background-color: orange;
+     width: 200px;
+     height: 200px;
+   }
+   .example3 {
+     position: absolute;
+     top: 0;
+     left: 0;
+     right: 0;
+     bottom: 0;
+     background-color: red;
+     width: 100px;
+     height: 100px;
+     margin: auto;
+   }
+   //如果未设置宽度，则宽度默认为父元素的宽度
+   //如果未设置高度，则宽度默认为父元素的高度；如果宽度和高度都未设置，则充满整个父元素。
+   ```
+
+
+
+### 三栏布局
+
+1.float布局
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>三栏布局——左右浮动布局</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      min-width: 550px;
+    }
+    .column {
+      min-height: 100px;
+    }
+    .left {
+      float: left;
+      width: 200px;
+      background: #ffbbff;
+    }
+    .center {
+      margin: 0 150px 0 200px;
+      background: #bfefff;
+    }
+    .right {
+      float: right;
+      width: 150px;
+      background: #eeee00;
+    }
+     .container::after{
+      content:" ";
+      display: block;
+      clear: both;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="column left">left</div>
+    <div class="column right">right</div>
+    <div class="column center">center</div>
+  </div>
+</body>
+</html>
+```
+
+2.双飞翼布局
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>三栏布局——双飞翼布局</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      min-width: 550px;
+    }
+    .container {
+      overflow: hidden;
+    }
+    .column {
+      float: left;
+      min-height: 100px;
+    }
+    .left {
+      margin-left: -100%;
+      width: 200px;
+      background: #ffbbff;
+    }
+    .center {
+      width: 100%;
+    }
+    .center-inner {
+      margin: 0 150px 0 200px;
+      min-height: 100px;
+      background: #bfefff;
+    }
+    .right {
+      margin-left: -150px;
+      width: 150px;
+      background: #eeee00;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="column center">
+      <div class="center-inner">center</div>
+    </div>
+    <div class="column left">left</div>
+    <div class="column right">right</div>
+  </div>
+</body>
+</html>
+```
+
+3.Flex布局
+
+```css
+.main {
+    display: flex;
+  	flex-direction: row;
+}
+.left{
+    width: 400px;
+    background-color: red;
+}
+.center{
+    background-color: blue;
+    flex: 1;
+}
+.right{
+    background-color: red;
+    width: 400px;
+}
+```
+
+4.grid布局
+
+```css
+.div{
+    width: 100%;
+    display: grid;
+    grid-template-rows: 100px;
+    grid-template-columns: 300px auto 300px;
+}
+```
+
+5.table布局
+
+```css
+.main{
+    width: 100%;
+    display: table;
+}
+.left,.center,.right{
+    display: table-cell;
+}
+.left{
+    width: 300px;
+    background-color: red;
+}
+.center{
+    background-color: blue;
+}
+.right{
+    width: 300px;
+    background-color: red;
+}
+```
+
+
+
+
+
+### 回流和重绘
+
+#### 浏览器渲染
+
+![webkit渲染过程](https://segmentfault.com/img/remote/1460000017329983?w=624&h=289)
+
+1. 解析HTML，生成DOM树，解析CSS，生成CSSOM树
+2. 将DOM树和CSSOM树结合，生成渲染树(Render Tree)
+3. Layout(回流):根据生成的渲染树，进行回流(Layout)，得到节点的几何信息（位置，大小）
+4. Painting(重绘):根据渲染树以及回流得到的几何信息，得到节点的绝对像素
+5. Display:将像素发送给GPU，展示在页面上。
+
+为了构建渲染树，浏览器主要完成了以下工作：
+
+1. 从DOM树的根节点开始遍历每个可见节点。
+2. 对于每个可见的节点，找到CSSOM树中对应的规则，并应用它们。
+3. 根据每个可见节点以及其对应的样式，组合生成渲染树。
+
+不可见的节点包括：
+
+- 一些不会渲染输出的节点，比如script、meta、link等。
+- 一些通过css进行隐藏的节点。注意，利用visibility和opacity隐藏的节点，还是会显示在渲染树上的。只有display:none的节点才不会显示在渲染树上。
+
+#### 回流
+
+计算可见节点在设备视口(viewport)内的确切位置和大小
+
+- 添加或删除可见的DOM元素
+- 元素的位置发生变化
+- 元素的尺寸发生变化（包括外边距、内边框、边框大小、高度和宽度等）
+- 内容发生变化，比如文本变化或图片被另一个不同尺寸的图片所替代。
+- 页面一开始渲染的时候
+- 浏览器的窗口尺寸变化（因为回流是根据视口的大小来计算元素的位置和大小的）
+- 获取布局信息的操作的时候，会强制浏览器处理队列刷新
+  - offsetTop、offsetLeft、offsetWidth、offsetHeight
+  - scrollTop、scrollLeft、scrollWidth、scrollHeight
+  - clientTop、clientLeft、clientWidth、clientHeight
+  - getComputedStyle()
+  - getBoundingClientRect()
+
+#### 重绘
+
+将渲染树的每个节点都转换为屏幕上的实际像素
+
+#### 减少回流和重绘
+
+- 为了减少发生次数，我们可以合并多次对DOM和样式的修改，然后统一处理
+
+  ```javascript
+  //使用cssText
+  const el = document.getElementById('test');
+  el.style.cssText += 'border-left: 1px; border-right: 2px; padding: 5px;';
+  //修改class
+  const el = document.getElementById('test');
+  el.className += ' active';
+  ```
+
+- 批量修改DOM
+
+  1. 使元素脱离文档流
+
+     - 隐藏元素，应用修改，重新显示
+
+       ```javascript
+       function appendDataToElement(appendToElement, data) {
+           let li;
+           for (let i = 0; i < data.length; i++) {
+               li = document.createElement('li');
+               li.textContent = 'text';
+               appendToElement.appendChild(li);
+           }
+       }
+       const ul = document.getElementById('list');
+       ul.style.display = 'none';
+       appendDataToElement(ul, data);
+       ul.style.display = 'block';
+       ```
+
+     - 使用文档片段(document fragment)在当前DOM之外构建一个子树，再把它拷贝回文档。
+
+       ```javascript
+       const ul = document.getElementById('list');
+       const fragment = document.createDocumentFragment();
+       appendDataToElement(fragment, data);
+       ul.appendChild(fragment);
+       ```
+
+     - 将原始元素拷贝到一个脱离文档的节点中，修改节点后，再替换原始的元素。
+
+       ```javascript
+       const ul = document.getElementById('list');
+       const clone = ul.cloneNode(true);
+       appendDataToElement(clone, data);
+       ul.parentNode.replaceChild(clone, ul);
+       ```
+
+  2. 对其进行多次修改
+
+  3. 将元素带回到文档中
+
+- 复杂动画效果，使用绝对定位让其脱离文档流
+
+  对于复杂动画效果，由于会经常的引起回流重绘，因此，我们可以使用绝对定位，让它脱离文档流。否则会引起父元素以及后续元素频繁的回流。
+
+- css3硬件加速
+
+  使用css3硬件加速，可以让transform、opacity、filters这些动画不会引起回流重绘 。但是对于动画的其它属性，比如background-color这些，还是会引起回流重绘的，不过它还是可以提升这些动画的性能。
+
 ### 动画
 
 #### transition
