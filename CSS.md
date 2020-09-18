@@ -1,22 +1,38 @@
-# CSS REVIEW
+# CSS
 
 ### 移动端适配(需整理)
 
-**分辨率**：1334pt x 750pt 表示屏幕上垂直有1334个物理像素，水平有750个物理像素。
+#### 分辨率和像素
 
-**屏幕尺寸**：4.7英寸指的是屏幕对角线的长度，1英寸等于2.54cm。
+- 分辨率：1334pt x 750pt 表示屏幕上垂直有1334个物理像素，水平有750个物理像素。
 
-**屏幕像素密度**：326ppi 指的是每英寸屏幕所拥有的像素数，在显示器中，dpi=ppi。dpi强调的是每英寸多少点。同时，屏幕像素密度=分辨率/屏幕尺寸
+- 屏幕尺寸：4.7英寸指的是屏幕对角线的长度，1英寸等于2.54cm。
 
-**设备独立像素**：CSS像素
+- 屏幕像素密度：326ppi 指的是每英寸屏幕所拥有的像素数，在显示器中，dpi=ppi。dpi强调的是每英寸多少点。同时，屏幕像素密度=分辨率/屏幕尺寸
 
-**设备像素比**：设备像素比dpr = 设备像素 / css像素（垂直方向或水平方向）。可以通过JS来获取： `window.devicePixelRatio`
+- 设备独立像素：CSS像素与设备独立像素之间的关系依赖于当前的缩放等级；
 
-布局视口：在移动端设备远大于浏览器窗口，是为了网页在小屏幕上也能展示得很好。
+- 设备像素比：设备像素比dpr = 设备像素 / css像素（垂直方向或水平方向）。
 
-视觉视口：用户看到网页区域内CSS像素的数量。移动端屏幕缩小时，屏幕窗口覆盖的CSS像素变多，视觉视口变大，反之亦然。
+  在web中，浏览器为我们提供了window.devicePixelRatio来帮助我们获取dpr。在css中，可以使用媒体查询min-device-pixel-ratio，区分dpr
 
-理想视口：最理想的布局视口尺寸。设置布局视口宽度为浏览器（屏幕）的宽度。
+  CSS的1px等于几个物理像素，除了和屏幕像素密度dpr有关，还和用户缩放有关系。例如，当用户把页面放大一倍，那么CSS中1px所代表的物理像素也会增加一倍；反之把页面缩小一倍，CSS中1px所代表的物理像素也会减少一倍。
+
+#### 视口
+
+- 布局视口：DOM宽度。在移动端设备远大于浏览器窗口，是为了网页在小屏幕上也能展示得很好。
+
+  ```html
+  document.documentElement.clientWidth/Height
+  ```
+
+- 视觉视口：屏幕宽度。用户看到网页区域内CSS像素的数量。移动端屏幕缩小时，屏幕窗口覆盖的CSS像素变多，视觉视口变大，反之亦然。 
+
+  ```html
+  window.innerWidth/Height
+  ```
+
+- 理想视口：最理想的布局视口尺寸。设置布局视口宽度为浏览器（屏幕）的宽度。
 
 ```html
 <meta name="viewport" content="width=device-width,initial-scale=1"> //解决IE兼容性问题
@@ -24,11 +40,16 @@
 
 ```html
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;"> //禁止缩放
+
+当前缩放值 = ideal viewport宽度  / visual viewport宽度
 ```
 
-width=device-width` 这句代码可以把布局视口设置成为浏览器（屏幕）的宽度。
-
-`initial-scale=1` 的意思是初始缩放的比例是1，使用它的时候，同时也会将布局视口的尺寸设置为缩放后的尺寸。而缩放的尺寸就是基于屏幕的宽度来的，也就起到了和 `width=device-width`同样的效果。
+- width: 设置layout viewport 的宽度，为一个正整数，或字符串”width-device”。
+- initial-scale: 设置页面的初始缩放值，为一个数字，可以带小数。
+- minimum-scale: 允许用户的最小缩放值，为一个数字，可以带小数。
+- maximum-scale: 允许用户的最大缩放值，为一个数字，可以带小数。
+- height: 设置layout viewport 的高度，这个属性对我们并不重要，很少使用。
+- user-scalable: 是否允许用户进行缩放，值为“no”或“yes”。
 
 
 
@@ -41,6 +62,8 @@ width=device-width` 这句代码可以把布局视口设置成为浏览器（屏
 很明显，在普通屏幕下，200×300的 `img`标签，所对应的物理像素个数就是200×300个，而两倍图片的位图像素个数则是200x300x4，于是就出现一个物理像素点对应4个位图像素点，所以它的取色也只能通过一定的算法进行缩减，显示结果就是一张只有原图像素总数四分之一，肉眼看上去虽然图片不会模糊，但是会觉得有点色差
 
 
+
+#### 适配方案
 
 1. 流式布局（百分比）
 
@@ -63,7 +86,7 @@ width=device-width` 这句代码可以把布局视口设置成为浏览器（屏
    
    
    
-           var desW = 640,
+           var desW = 640,//设计图是css像素还是物理像素
    
    
    
@@ -206,3 +229,155 @@ translate
   transform:translate(20px,5vh);/*向左移动二十像素,向下移动百分之五的视窗高度*/
 }
 ```
+
+
+
+### 1px边框适配解决方案：CSS媒体查询进行缩放
+
+```css
+@media only screen and (-webkit-min-device-pixel-ratio:2.0){
+  .border-bottom::after{
+    -webkit-transform: scaleY(0.5);
+		transform: scaleY(0.5);
+  }
+}
+@media only screen and (-webkit-min-device-pixel-ratio:3.0){
+		.border-bottom::after{
+    -webkit-transform: scaleY(0.33);
+		transform: scaleY(0.33);
+  }
+}
+```
+
+
+
+### 防抖
+
+```javascript
+let debounce = function(fn,delay){
+  let timer = null;
+  return function(){
+    const context = this;
+    const args = arguments;
+    clearTimeout(timer);
+    timer = setTimeout({
+     	fn.apply(context,args);
+    },delay)
+  }
+}
+```
+
+
+
+### 节流
+
+```javascript
+const throttle = function(fn,delay){
+  let wait = false;
+  return function(){
+    const context = this;
+    const args = arguments;
+    if(!wait){
+      wait = true;
+      setTimeout({
+        fn.apply(context,args);
+        wait = false;
+      },delay)
+    }
+  }
+}
+```
+
+
+
+### 雪碧图
+
+雪碧图也叫CSS精灵， 是一种CSS图像合成技术；
+
+#### 优点
+
+- 将多张图片合并到一张图片中，可以减小图片的总大小。
+
+- 将多张图片合并成一张图片后，下载全部所需的资源，只需一次请求。可以减小建立连接的消耗。
+
+  #### 缺点
+
+- 在宽屏，高分辨率的屏幕下的自适应页面，雪碧图如果不够宽，容易出现背景断裂
+- 在开发的时候，需要通过photoshop或其他工具测量计算每一个背景单元的精确位置
+- 在维护的时候比较麻烦，如果页面背景有少许改动，一般就要修改整张合并的图片
+
+```css
+.box{width:208px; height:202px; background:url(img/all.png) no-repeat -32px -48px;}
+```
+
+
+
+### Box Model
+
+box-sizing: content-box 标准盒子模型
+
+box-sizing: border-box 怪异盒子模型
+
+
+
+### CSS选择器优先级
+
+```CSS
+//两个样式优先级相同，选后者
+<style>
+    span.inner{
+        color:"red";
+    }
+    .text span{
+        color:"black";
+    }
+</style>
+</head>
+<body>
+    <span class="text">
+        <span class="inner">Text</span> //黑色
+    </span>
+</body>
+```
+
+
+
+### box-shadow
+
+```css
+box-shadow: offset-x offset-y blur spread color inset;
+```
+
+- `<offset-x>` 设置水平偏移量，如果是负值则阴影位于元素左边。 
+
+- `<offset-y>` 设置垂直偏移量，如果是负值则阴影位于元素上面。如果两者都是0，那么阴影位于元素后面。这时如果设置了`<blur-radius>` `或<spread-radius>` 则有模糊效果。
+
+- `<blur-radius>模糊半径`值越大，模糊面积越大，阴影就越大越淡。 不能为负值。默认为0，此时阴影边缘锐利。
+
+- `<spread-radius>扩展半径`取正值时，阴影扩大；取负值时，阴影收缩。默认为0，此时阴影与元素同样大。
+
+- `<color>`如果没有指定，则由浏览器决定——通常是[`color`](https://developer.mozilla.org/zh-CN/docs/Web/CSS/color)的值，不过目前Safari取透明。
+
+- `<inset>`如果没有指定`inset`，默认阴影在边框外，即阴影向外扩散。使用 `inset` 关键字会使得阴影落在盒子内部，这样看起来就像是内容被压低了。 此时阴影会在边框之内 (即使是透明边框）、背景之上、内容之下。
+
+- 若要对同一个元素添加多个阴影效果，请使用逗号将每个阴影规则分隔开。
+
+- 单边阴影（待整理）
+
+  ```css
+  .left{
+         box-shadow:-5px 0 10px -5px #00ff00;
+  }
+  .bottom{
+         box-shadow:0 5px 10px -5px #00ff00;
+  }
+  .right{
+         box-shadow:5px 0 10px -5px #00ff00;
+  }
+  .top{
+         box-shadow:0px -5px 10px -5px #00ff00;
+  }
+  ```
+
+  
+

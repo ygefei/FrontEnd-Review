@@ -1,50 +1,80 @@
 # HTML
 
-滚动加载
+### Property和Attribute
+
+#### Attribute
+
+1. Attributes are defined by HTML, all definitions inside HTML tag are attributes.
+2. The type of attributes is always string.
+
+### Property
+
+1. Properties belong to DOM, the nature of DOM is an object in  JavaScript. We can get and set properties as we do to a normal object in JavaScript and properties can be any types.
+
+2. Non-custom attributes have 1:1 mapping onto properties, like: id, class, title, etc.
+
+   ```html
+   </div><div id="test" class="button" foo="1"></div>
+   ```
+
+   ```javascript
+   document.getElementById('test').id; // return string: "test"
+   document.getElementById('test').className; // return string: "button"
+   document.getElementById('test').foo; // return undefined as foo is a custom attribute
+   ```
+
+   Notice: We need to use **"className"** when get and set **"class"** by property because **"class"** is a JavaScript reserved word.
+
+   ```javascript
+   document.getElementById('test').className = button; 
+   document.getElementById('test').setAttribute("class","button");
+   ```
+
+3. Non-custom propertiy (attribute) changes when corresponding attribute (property) changes in most cases.
+
+   ```html
+   <div id="test" class="button"></div>
+   ```
+
+   ```javascript
+   var div = document.getElementById('test');
+   div.className = 'red-input';
+   div.getAttribute('class'); // return string: "red-input"
+   div.setAttribute('class','green-input');
+   div.className; // return string: "green-input"
+   ```
+
+4. Attribute which has a default value doesn't change when corresponding property changes.
+
+   ```html
+   <input id="search" value="foo" />
+   ```
+
+   ```javascript
+   var input = document.getElementById('search');
+   input.value = 'foo2';
+   input.getAttribute('value'); // return string: "foo"
+   ```
+
+
+
+### Element.setAttribute(name, value)
+
+设置boolean值：
+
+It is recommended to use **property** in JavaScript as it's much easier and faster. Especially for boolean type attributes like:  "checked", "disabled" and "selected", browser automatically converts  them into boolean type properties.
 
 ```javascript
-// onload是等所有的资源文件加载完毕以后再绑定事件
-window.onload = function(){
-	// 获取图片列表，即img标签列表
-	var imgs = document.querySelectorAll('img');
+b.setAttribute("disabled", ""); //true
+b.removeAttribute("disabled") //false
 
-	// 获取到浏览器顶部的距离
-	function getTop(e){
-		return e.offsetTop;
-	}
+//better
+b.disabled = true
+b.disabled = false
 
-	// 懒加载实现
-	function lazyload(imgs){
-		// 可视区域高度
-		var h = window.innerHeight;
-		//滚动区域高度
-		var s = document.documentElement.scrollTop || document.body.scrollTop;
-		for(var i=0;i<imgs.length;i++){
-			//图片距离顶部的距离大于可视区域和滚动区域之和时懒加载
-			if ((h+s)>getTop(imgs[i])) {
-				// 真实情况是页面开始有2秒空白，所以使用setTimeout定时2s
-				(function(i){
-					setTimeout(function(){
-						// 不加立即执行函数i会等于9
-						// 隐形加载图片或其他资源，
-						//创建一个临时图片，这个图片在内存中不会到页面上去。实现隐形加载
-						var temp = new Image();
-						temp.src = imgs[i].getAttribute('data-src');//只会请求一次
-						// onload判断图片加载完毕，真是图片加载完毕，再赋值给dom节点
-						temp.onload = function(){
-							// 获取自定义属性data-src，用真图片替换假图片
-							imgs[i].src = imgs[i].getAttribute('data-src')
-						}
-					},2000)
-				})(i)
-			}
-		}
-	}
-	lazyload(imgs);
-
-	// 滚屏函数
-	window.onscroll =function(){
-		lazyload(imgs);
-	}
-}
 ```
+
+To get the current value of an attribute, use [`getAttribute()`](https://developer.mozilla.org/en-US/docs/Web/API/Element/getAttribute); to remove an attribute, call [`removeAttribute()`](https://developer.mozilla.org/en-US/docs/Web/API/Element/removeAttribute).
+
+
+

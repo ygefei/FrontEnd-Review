@@ -90,3 +90,24 @@ const PopularTabPage = connect(mapStateToProps, mapDispatchToProps)(PopularTab);
 ```
 
 
+
+### 中间件源码
+
+
+
+### logger中间件
+
+```javascript
+const logger = store => next => action => {
+  if(typeof action === 'function'){
+    console.log("dispatch a function");
+  }else {
+    console.log("dispatch:"+action);
+  }
+  
+  const result = next(action);
+  console.log('nextState',store.getState());
+  return result;
+}
+```
+
